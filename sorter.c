@@ -221,9 +221,11 @@ void insert(char* line){
 	}
 }	
 
-void traverse(char d[]){
+void* traverse(void* p_d){
 
-	if(d[0] != '\0'){
+    char* d = (char*)p_d;
+	printf("Here");
+	if(*d != '\0'){
 	    dir = opendir(d);
 	    if(ENOENT == errno){
 	        printf("\nERROR10: No such directory exists. Exiting program.\n");
@@ -234,6 +236,7 @@ void traverse(char d[]){
             dir = opendir("./");
             d[0]='.';d[1]='/';d[2]='\0';
         }
+	printf("____");
         if(o[0] != '\0' && *(o+strlen(o)-1) != '/')
             strcat(o, "/");
 	if(*(d+(strlen(d)-1)) != '/')
@@ -461,7 +464,7 @@ int main(int argc, char* argv[])
 	printf("Initial PID: %d\n", getpid());
 	printf("PIDs of all child processes: ");
 	fflush(stdout);
-	traverse(d);
+	traverse(&d);
 	fflush(stdout);
 	wait(NULL);
 	fflush(stdout);
