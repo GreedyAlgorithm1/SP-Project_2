@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include "sorter.h"
 #include <errno.h>
+#include <pthread.h>
 
 int entry;
 char *c, o[1024], *d;
@@ -222,10 +223,16 @@ void insert(char* line){
 }	
 
 void* traverse(void* p_d){
+	
+    char d[1024]; int z = 0;
+	char* c_d = (char*)p_d;
+	do{
+		d[z] = *c_d;
+		z++; c_d++;
+	}while(*c_d != '\0');
 
-    char* d = (char*)p_d;
-	printf("Here");
-	if(*d != '\0'){
+	//printf("Here");
+	if(d[0] != '\0'){
 	    dir = opendir(d);
 	    if(ENOENT == errno){
 	        printf("\nERROR10: No such directory exists. Exiting program.\n");
@@ -236,7 +243,7 @@ void* traverse(void* p_d){
             dir = opendir("./");
             d[0]='.';d[1]='/';d[2]='\0';
         }
-	printf("____");
+	//printf("____");
         if(o[0] != '\0' && *(o+strlen(o)-1) != '/')
             strcat(o, "/");
 	if(*(d+(strlen(d)-1)) != '/')
@@ -258,10 +265,13 @@ void* traverse(void* p_d){
 			mlock(totalProcesses, sizeof *totalProcesses);
 			(*totalProcesses)++;
 			munlock(totalProcesses, sizeof *totalProcesses);
-            pid_t pid;
-            pid = fork();
+            //pid_t pid;
+            //pid = fork();
+			
+			//pthread_t tid;
+			//pthread_create(tid, NULL, 
 
-            if(pid == 0){
+            /*if(pid == 0){
                 //printf("Forking for csv file %s\n",ep->d_name);
 				//(*totalProcesses)++;
 				//if(*totalProcesses > 1){
@@ -280,8 +290,8 @@ void* traverse(void* p_d){
                     csvHandler(fp, o, ep->d_name);
 				}
 				//printf("CSV File: Returning %d\n", (*totalProcesses)+1);
-				return;
-            }
+				return NULL;
+            }*/
 			//ep = readdir(dir);
         }
 	 
@@ -293,10 +303,17 @@ void* traverse(void* p_d){
 
 			//if(root != getpid())
 					//printf(",");
-            pid_t pid;
-			pid = fork();
+            //pid_t pid;
+			//pid = fork();
 			
-            if(pid == 0){
+			char t_d[1024];
+			memcpy(t_d, d, 1024);
+			strcat(t_d, ep->d_name);strcat(t_d, "/");
+			pthread_t tid;
+			pthread_create(&tid, NULL, traverse, t_d);
+			pthread_join(tid, NULL);
+
+            /*if(pid == 0){
 				//(*totalProcesses)++;
 				//if(*totalProcesses > 1){
 				//		printf(",");
@@ -309,7 +326,7 @@ void* traverse(void* p_d){
 				strcat(d, ep->d_name);strcat(d, "/");
                 dir = opendir(d);
 				continue;
-            }//printf("PID: %d\n", pid);
+            }//printf("PID: %d\n", pid);*/
         }
 	}
 	closedir(dir);
@@ -318,7 +335,7 @@ void* traverse(void* p_d){
 	//printf("Exit status: %d\n", WEXITSTATUS(status));
 	//*totalProcesses += WEXITSTATUS(status);
 	//printf("Process finished at %s\n", d);
-	return;
+	return NULL;
 	
 }
 
@@ -464,7 +481,7 @@ int main(int argc, char* argv[])
 	printf("Initial PID: %d\n", getpid());
 	printf("PIDs of all child processes: ");
 	fflush(stdout);
-	traverse(&d);
+	traverse(d);
 	fflush(stdout);
 	wait(NULL);
 	fflush(stdout);
