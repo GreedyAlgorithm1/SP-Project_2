@@ -1,5 +1,6 @@
 #ifndef _SORTER_H_
 #define _SORTER_H_
+#include <stdio.h>
 
 char *c;
 
@@ -35,6 +36,13 @@ typedef struct movie_
 	long movie_facebook_likes;
 	struct movie_* next;
 }movie;
+
+typedef struct fileParams_
+{
+	char* fileName;
+	FILE* fp;
+	char* d;
+}fileParams;
 
 char** getString(movie** info,int entry,int element);
 long* getInt(movie** info,int entry,int element);

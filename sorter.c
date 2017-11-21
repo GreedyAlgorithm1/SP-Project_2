@@ -25,7 +25,7 @@ pid_t root;
 DIR *dir;
 struct dirent *ep;
 
-int csvHandler(FILE* fp, char* d, char fileName[]);
+void* csvHandler(void* params);
 
 void allocate(int rows){
 	int r;
@@ -265,6 +265,24 @@ void* traverse(void* p_d){
 			mlock(totalProcesses, sizeof *totalProcesses);
 			(*totalProcesses)++;
 			munlock(totalProcesses, sizeof *totalProcesses);
+
+			fileParams* params = (fileParams*)malloc(sizeof(fileParams));
+			char temp[1024];
+            strcpy(temp, d);
+			FILE *fp = fopen(strcat(temp, ep->d_name), "r");
+			printf("Creating thread for file: %s\n", ep->d_name);
+			params->fp = fp;
+			char t_d[1024];
+			memcpy(t_d, d, 1024);
+			//strcat(t_d, ep->d_name);strcat(t_d, "/");
+			params->d = t_d;
+			params->fileName = ep->d_name;
+
+			pthread_t tid;
+			pthread_create(&tid, NULL, csvHandler, (void*)params);
+			//printf("Creating thread for csv file: %s\n", t_d);
+			pthread_join(tid, NULL);
+
             //pid_t pid;
             //pid = fork();
 			
@@ -311,6 +329,7 @@ void* traverse(void* p_d){
 			strcat(t_d, ep->d_name);strcat(t_d, "/");
 			pthread_t tid;
 			pthread_create(&tid, NULL, traverse, t_d);
+			printf("Creating thread for directory: %s\n", t_d);
 			pthread_join(tid, NULL);
 
             /*if(pid == 0){
@@ -339,12 +358,18 @@ void* traverse(void* p_d){
 	
 }
 
-int csvHandler(FILE* fp, char* d, char fileName[]){
+void* csvHandler(void* params){
     /*		STEP 1
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
 	 */
 	entry = -1;
+	char* fileName = ((fileParams*)params)->fileName;
+	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
+	
+	FILE* fp = ((fileParams*)params)->fp;
+	char* d = ((fileParams*)params)->d;
+
 	   
 	 /*		STEP 2.1
 	  *Count number of entries and columns
