@@ -16,11 +16,12 @@
 int entry;
 char *c, o[1024], *d;
 //pid_t PIDs[1024];
-char stream[1024];
+//char stream[1024];
 movie** info;
 int *totalProcesses;
 pid_t root;
 //int status[256];
+int curTotal = 0;
 
 DIR *dir;
 struct dirent *ep;
@@ -29,8 +30,14 @@ void* csvHandler(void* params);
 
 void allocate(int rows){
 	int r;
-	info = malloc(rows * sizeof(movie*));
-	for(r = 0; r < rows; r++){
+	if(curTotal == 0)
+	{
+		info = malloc(rows*sizeof(movie*));
+	}
+	else{
+		realloc(info, (rows+curTotal) * sizeof(movie*));
+	}
+	for(r = curTotal; r < rows+curTotal; r++){
 		info[r] = (movie*)malloc(sizeof(movie));
 		info[r]->color = (char*)malloc(sizeof(char));
 		info[r]->director_name = (char*)malloc(sizeof(char));
@@ -45,6 +52,9 @@ void allocate(int rows){
 		info[r]->country = (char*)malloc(sizeof(char));
 		info[r]->content_rating = (char*)malloc(sizeof(char));
 	}
+	//TODO: mlock()
+	curTotal+=rows;
+	//TODO: Unlock()
 }
 
 void deallocate(int rows){
@@ -170,6 +180,8 @@ void insert(char* line){
 						*val = (char *)realloc(*val,position+2);
 						strncat(*val, &line[k-space], 1+space);
 						space = 0;
+						if(curTotal > 6000)
+							printf("val--> %s \n", *val); 
 				}
 				if(line[k] == '"' && par == 0){
 						position++;
@@ -414,6 +426,7 @@ void* csvHandler(void* params){
 	**/
 	allocate(numOfEntries);
 	numOfEntries--;
+	char stream[1028]; 
 	int k = 0;
 	while(!feof(fp))
 	{	
@@ -436,7 +449,7 @@ void* csvHandler(void* params){
 
 	mergesort(info, 0, numOfEntries-2,c);
 	print(info, numOfEntries, fileName, d);
-	deallocate(numOfEntries);
+	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
         return 0;
