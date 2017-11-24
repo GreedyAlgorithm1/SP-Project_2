@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <pthread.h>
 
-int entry;
+int entry = -1;
 char *c, o[1024], *d;
 //pid_t PIDs[1024];
 //char stream[1024];
@@ -35,7 +35,7 @@ void allocate(int rows){
 		info = malloc(rows*sizeof(movie*));
 	}
 	else{
-		realloc(info, (rows+curTotal) * sizeof(movie*));
+		info = realloc(info, (rows+curTotal) * sizeof(movie*));
 	}
 	for(r = curTotal; r < rows+curTotal; r++){
 		info[r] = (movie*)malloc(sizeof(movie));
@@ -235,6 +235,7 @@ void insert(char* line){
 }	
 
 void* traverse(void* p_d){
+
 	
     char d[1024]; int z = 0;
 	char* c_d = (char*)p_d;
@@ -243,7 +244,7 @@ void* traverse(void* p_d){
 		z++; c_d++;
 	}while(*c_d != '\0');
 
-	//printf("Here");
+	printf("Trying to open directory: %s\n", d);
 	if(d[0] != '\0'){
 	    dir = opendir(d);
 	    if(ENOENT == errno){
@@ -255,8 +256,7 @@ void* traverse(void* p_d){
             dir = opendir("./");
             d[0]='.';d[1]='/';d[2]='\0';
         }
-	//printf("____");
-        if(o[0] != '\0' && *(o+strlen(o)-1) != '/')
+	if(o[0] != '\0' && *(o+strlen(o)-1) != '/')
             strcat(o, "/");
 	if(*(d+(strlen(d)-1)) != '/')
             strcat(d, "/");
@@ -340,7 +340,7 @@ void* traverse(void* p_d){
 			memcpy(t_d, d, 1024);
 			strcat(t_d, ep->d_name);strcat(t_d, "/");
 			pthread_t tid;
-			pthread_create(&tid, NULL, traverse, t_d);
+			pthread_create(&tid, NULL, traverse, (void*)t_d);
 			printf("Creating thread for directory: %s\n", t_d);
 			pthread_join(tid, NULL);
 
@@ -375,14 +375,13 @@ void* csvHandler(void* params){
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
 	 */
-	entry = -1;
+	//entry = -1;
 	char* fileName = ((fileParams*)params)->fileName;
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
 	
 	FILE* fp = ((fileParams*)params)->fp;
 	char* d = ((fileParams*)params)->d;
 
-	   
 	 /*		STEP 2.1
 	  *Count number of entries and columns
 	  */
@@ -399,10 +398,7 @@ void* csvHandler(void* params){
 		if(buff == '\n')
 			numOfEntries++;
 	}
-
 	rewind(fp);
-
-
         if(fp == NULL)
         {
                 //printf("ERROR02: Empty input. Exiting Program.\n");
@@ -456,8 +452,7 @@ void* csvHandler(void* params){
 		//exit(0);
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
 	root = getpid();
 	totalProcesses = mmap(NULL, sizeof *totalProcesses, PROT_READ | PROT_WRITE,MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 	//totalProcesses = malloc(sizeof(int));
