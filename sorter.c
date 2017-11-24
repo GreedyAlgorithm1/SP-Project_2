@@ -179,9 +179,7 @@ void insert(char* line){
 				else{
 						*val = (char *)realloc(*val,position+2);
 						strncat(*val, &line[k-space], 1+space);
-						space = 0;
-						if(curTotal > 6000)
-							printf("val--> %s \n", *val); 
+						space = 0; 
 				}
 				if(line[k] == '"' && par == 0){
 						position++;
@@ -237,12 +235,14 @@ void insert(char* line){
 void* traverse(void* p_d){
 
 	DIR *dir;
-    char d[1024]; int z = 0;
-	char* c_d = (char*)p_d;
-	do{
-		d[z] = *c_d;
-		z++; c_d++;
-	}while(*c_d != '\0');
+    char d[1024]; //int z = 0;
+	printf("Directory data coming in: %s ---- ", (char*)p_d);
+	//char* c_d = (char*)p_d;
+	/*do{
+		d[z] = *(char*)p_d;
+		z++; (char*)p_d++;
+	}while(*(char*)p_d != '\0');*/
+	strcpy(d, (char*)p_d);
 
 	printf("Trying to open directory: %s\n", d);
 	if(d[0] != '\0'){
@@ -327,9 +327,9 @@ void* traverse(void* p_d){
 	 
         else if(ep->d_type == '\004' && ep->d_name[0] != '.'){ //Found directory
             //printf("Found directory %s\n", ep->d_name);
-			mlock(totalProcesses, sizeof *totalProcesses);
+			//mlock(totalProcesses, sizeof *totalProcesses);
 			(*totalProcesses)++;
-			munlock(totalProcesses, sizeof *totalProcesses);
+			//munlock(totalProcesses, sizeof *totalProcesses);
 
 			//if(root != getpid())
 					//printf(",");
@@ -340,6 +340,7 @@ void* traverse(void* p_d){
 			memcpy(t_d, d, 1024);
 			strcat(t_d, ep->d_name);strcat(t_d, "/");
 			pthread_t tid;
+			printf("t_d: %s d: %s ep->d_name %s\n", t_d, d, ep->d_name);
 			pthread_create(&tid, NULL, traverse, (void*)t_d);
 			printf("Creating thread for directory: %s\n", t_d);
 			pthread_join(tid, NULL);
@@ -377,6 +378,7 @@ void* csvHandler(void* params){
 	 */
 	//entry = -1;
 	char* fileName = ((fileParams*)params)->fileName;
+	printf("Trying to sort file: %s\n", fileName);
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
 	
 	FILE* fp = ((fileParams*)params)->fp;
