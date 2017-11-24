@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <pthread.h>
 
-int entry = -1;
+int entry = 0;
 char *c, o[1024], *d;
 //pid_t PIDs[1024];
 //char stream[1024];
@@ -236,7 +236,7 @@ void* traverse(void* p_d){
 
 	DIR *dir;
     char d[1024]; //int z = 0;
-	printf("Directory data coming in: %s ----\n ", (char*)p_d);
+	//printf("Directory data coming in: %s ----\n ", (char*)p_d);
 	//char* c_d = (char*)p_d;
 	/*do{
 		d[z] = *(char*)p_d;
@@ -244,7 +244,7 @@ void* traverse(void* p_d){
 	}while(*(char*)p_d != '\0');*/
 	strcpy(d, (char*)p_d);
 
-	printf("Trying to open directory: %s\n", d);
+	//printf("Trying to open directory: %s\n", d);
 	if(d[0] != '\0'){
 	    dir = opendir(d);
 	    if(ENOENT == errno){
@@ -340,7 +340,7 @@ void* traverse(void* p_d){
 			memcpy(t_d, d, 1024);
 			strcat(t_d, ep->d_name);strcat(t_d, "/");
 			pthread_t tid;
-			printf("t_d: %s d: %s ep->d_name %s\n", t_d, d, ep->d_name);
+			//printf("t_d: %s d: %s ep->d_name %s\n", t_d, d, ep->d_name);
 			pthread_create(&tid, NULL, traverse, (void*)t_d);
 			printf("Creating thread for directory: %s\n", t_d);
 			pthread_join(tid, NULL);
@@ -376,7 +376,7 @@ void* csvHandler(void* params){
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
 	 */
-	//entry = -1;
+	entry--;
 	char* fileName = ((fileParams*)params)->fileName;
 	printf("Trying to sort file: %s\n", fileName);
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
