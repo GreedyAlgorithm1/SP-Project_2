@@ -23,7 +23,7 @@ pid_t root;
 //int status[256];
 int curTotal = 0;
 
-DIR *dir;
+//DIR *dir;
 struct dirent *ep;
 
 void* csvHandler(void* params);
@@ -236,7 +236,7 @@ void insert(char* line){
 
 void* traverse(void* p_d){
 
-	
+	DIR *dir;
     char d[1024]; int z = 0;
 	char* c_d = (char*)p_d;
 	do{
