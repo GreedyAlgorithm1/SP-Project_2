@@ -236,7 +236,7 @@ void* traverse(void* p_d){
 
 	DIR *dir;
     char d[1024]; //int z = 0;
-	printf("Directory data coming in: %s ---- ", (char*)p_d);
+	printf("Directory data coming in: %s ----\n ", (char*)p_d);
 	//char* c_d = (char*)p_d;
 	/*do{
 		d[z] = *(char*)p_d;
@@ -522,7 +522,7 @@ int main(int argc, char* argv[]){
 	fflush(stdout);
 	if(getpid() == root){
 	    wait(NULL);
-		printf("\nTotal Number of processes: %d\n",*totalProcesses);
+		printf("\nTotal Number of threads: %d\n",*totalProcesses);
 	}
 	
 	//free(totalProcesses);
