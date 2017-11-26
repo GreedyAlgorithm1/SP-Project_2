@@ -25,6 +25,7 @@ int curTotal = 0;
 
 //DIR *dir;
 struct dirent *ep;
+pthread_mutex_t lock;
 
 void* csvHandler(void* params);
 
@@ -52,9 +53,7 @@ void allocate(int rows){
 		info[r]->country = (char*)malloc(sizeof(char));
 		info[r]->content_rating = (char*)malloc(sizeof(char));
 	}
-	//TODO: mlock()
 	curTotal+=rows;
-	//TODO: Unlock()
 }
 
 void deallocate(int rows){
@@ -177,6 +176,8 @@ void insert(char* line){
 				if(line[k] == ' ' || isprint(line[k]) == 0 || line[k]== '"')
 						space++;
 				else{
+						if(entry == 5044 && k > 88)
+								printf("New File\n");
 						*val = (char *)realloc(*val,position+2);
 						strncat(*val, &line[k-space], 1+space);
 						space = 0; 
@@ -376,7 +377,7 @@ void* csvHandler(void* params){
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
 	 */
-	entry--;
+	//entry--;
 	char* fileName = ((fileParams*)params)->fileName;
 	printf("Trying to sort file: %s\n", fileName);
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
@@ -422,6 +423,7 @@ void* csvHandler(void* params){
 	 *That way with testcases that don't have certain feilds in them we can increment the counter to
 	 *go to the next element in the array
 	**/
+	pthread_mutex_lock(&lock);
 	allocate(numOfEntries);
 	numOfEntries--;
 	char stream[1028]; 
@@ -429,24 +431,29 @@ void* csvHandler(void* params){
 	while(!feof(fp))
 	{	
 		fgets(stream,sizeof(stream),fp);
-		if(k != 0)
+		if(k != 0){
+			printf("%d : ", entry);
 			insert(stream);
-		else{
+		}
+		else if(k == 0){
 				if(strncmp(stream, "color,director_name,num_critic_for_reviews,duration,director_facebook_likes,actor_3_facebook_likes,actor_2_name,actor_1_facebook_likes,gross,genres,actor_1_name,movie_title,num_voted_users,cast_total_facebook_likes,actor_3_name,facenumber_in_poster,plot_keywords,movie_imdb_link,num_user_for_reviews,language,country,content_rating,budget,title_year,actor_2_facebook_likes,imdb_score,aspect_ratio,movie_facebook_likes", 417) != 0){
 					//printf("Found directory: %s\n", d);
 					//printf("ERROR04: Invalid column names. Exiting\n");
 					deallocate(numOfEntries);
 					//wait(NULL);
+					pthread_mutex_unlock(&lock);
 					return 0;
 					//exit(0);
 			}
 			k = 1;
+			entry--;
 		}
 		entry++;
 	}
+	pthread_mutex_unlock(&lock);
 
 	mergesort(info, 0, numOfEntries-2,c);
-	print(info, numOfEntries, fileName, d);
+	//print(info, numOfEntries, fileName, d);
 	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
