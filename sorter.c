@@ -34,9 +34,13 @@ void allocate(int rows){
 	if(curTotal == 0)
 	{
 		info = malloc(rows*sizeof(movie*));
+		//info = realloc(info, rows*sizeof(movie*));
 	}
 	else{
+		printf("Reallocating %d by %d bytes - (rows+curTotal): %d (sizeof(movie)): %lu total: %lu\n", curTotal, rows,rows+curTotal, sizeof(movie), (rows+curTotal)*sizeof(movie*));
 		info = realloc(info, (rows+curTotal) * sizeof(movie*));
+		if(info == NULL)
+				printf("Reallocate failed\n");
 	}
 	for(r = curTotal; r < rows+curTotal; r++){
 		info[r] = (movie*)malloc(sizeof(movie));
@@ -176,11 +180,11 @@ void insert(char* line){
 				if(line[k] == ' ' || isprint(line[k]) == 0 || line[k]== '"')
 						space++;
 				else{
-						if(entry == 5044 && k > 88)
-								printf("New File\n");
+						//if(entry == 5044 && k > 88)
+								//printf("New File\n");
 						*val = (char *)realloc(*val,position+2);
 						strncat(*val, &line[k-space], 1+space);
-						space = 0; 
+						space = 0;
 				}
 				if(line[k] == '"' && par == 0){
 						position++;
@@ -424,15 +428,17 @@ void* csvHandler(void* params){
 	 *go to the next element in the array
 	**/
 	pthread_mutex_lock(&lock);
-	allocate(numOfEntries);
 	numOfEntries--;
+	printf("Found %d of lines\n", numOfEntries);
+	allocate(numOfEntries);	
 	char stream[1028]; 
 	int k = 0;
 	while(!feof(fp))
 	{	
-		fgets(stream,sizeof(stream),fp);
+		if(fgets(stream,sizeof(stream),fp) == NULL)
+				break;
 		if(k != 0){
-			printf("%d : ", entry);
+			//printf("%d : ", entry);
 			insert(stream);
 		}
 		else if(k == 0){
@@ -453,7 +459,7 @@ void* csvHandler(void* params){
 	pthread_mutex_unlock(&lock);
 
 	mergesort(info, 0, numOfEntries-2,c);
-	//print(info, numOfEntries, fileName, d);
+	print(info, numOfEntries, fileName, d);
 	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
