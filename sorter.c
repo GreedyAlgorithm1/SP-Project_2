@@ -33,29 +33,38 @@ void allocate(int rows){
 	int r;
 	if(curTotal == 0)
 	{
+		//printf("Allocating %d rows\n", rows);
 		info = malloc(rows*sizeof(movie*));
 		//info = realloc(info, rows*sizeof(movie*));
 	}
 	else{
-		printf("Reallocating %d by %d bytes - (rows+curTotal): %d (sizeof(movie)): %lu total: %lu\n", curTotal, rows,rows+curTotal, sizeof(movie), (rows+curTotal)*sizeof(movie*));
+		//printf("New realloc of size %d\n", rows+curTotal);
+		/*movie** temp = malloc((rows+curTotal)*sizeof(movie*));
+		for(r = 0; r < curTotal; r++){
+			temp[r] = info[r];
+		}
+		free(info);
+		info = temp;*/
+		//printf("Reallocating %d by %d bytes - (rows+curTotal): %d (sizeof(movie)): %lu total: %lu\n", curTotal, rows,rows+curTotal, sizeof(movie), (rows+curTotal)*sizeof(movie*));
 		info = realloc(info, (rows+curTotal) * sizeof(movie*));
 		if(info == NULL)
 				printf("Reallocate failed\n");
 	}
 	for(r = curTotal; r < rows+curTotal; r++){
-		info[r] = (movie*)malloc(sizeof(movie));
-		info[r]->color = (char*)malloc(sizeof(char));
-		info[r]->director_name = (char*)malloc(sizeof(char));
-		info[r]->actor_2_name = (char*)malloc(sizeof(char));
-		info[r]->genres = (char*)malloc(sizeof(char));
-		info[r]->actor_1_name = (char*)malloc(sizeof(char));
-		info[r]->movie_title = (char*)malloc(sizeof(char));
-		info[r]->actor_3_name = (char*)malloc(sizeof(char));
-		info[r]->plot_keywords = (char*)malloc(sizeof(char));
-		info[r]->movie_imdb_link = (char*)malloc(sizeof(char));
-		info[r]->language = (char*)malloc(sizeof(char));
-		info[r]->country = (char*)malloc(sizeof(char));
-		info[r]->content_rating = (char*)malloc(sizeof(char));
+		//printf("New malloc on %d\n", r);
+		info[r] = (movie*)calloc(1, sizeof(movie));
+		info[r]->color = (char*)calloc(1, sizeof(char));
+		info[r]->director_name = (char*)calloc(1, sizeof(char));
+		info[r]->actor_2_name = (char*)calloc(1, sizeof(char));
+		info[r]->genres = (char*)calloc(1, sizeof(char));
+		info[r]->actor_1_name = (char*)calloc(1, sizeof(char));
+		info[r]->movie_title = (char*)calloc(1, sizeof(char));
+		info[r]->actor_3_name = (char*)calloc(1, sizeof(char));
+		info[r]->plot_keywords = (char*)calloc(1, sizeof(char));
+		info[r]->movie_imdb_link = (char*)calloc(1, sizeof(char));
+		info[r]->language = (char*)calloc(1, sizeof(char));
+		info[r]->country = (char*)calloc(1, sizeof(char));
+		info[r]->content_rating = (char*)calloc(1, sizeof(char));
 	}
 	curTotal+=rows;
 }
@@ -287,7 +296,7 @@ void* traverse(void* p_d){
 			char temp[1024];
             strcpy(temp, d);
 			FILE *fp = fopen(strcat(temp, ep->d_name), "r");
-			printf("Creating thread for file: %s\n", ep->d_name);
+			//printf("Creating thread for file: %s\n", ep->d_name);
 			params->fp = fp;
 			char t_d[1024];
 			memcpy(t_d, d, 1024);
@@ -347,7 +356,7 @@ void* traverse(void* p_d){
 			pthread_t tid;
 			//printf("t_d: %s d: %s ep->d_name %s\n", t_d, d, ep->d_name);
 			pthread_create(&tid, NULL, traverse, (void*)t_d);
-			printf("Creating thread for directory: %s\n", t_d);
+			//printf("Creating thread for directory: %s\n", t_d);
 			pthread_join(tid, NULL);
 
             /*if(pid == 0){
@@ -383,7 +392,7 @@ void* csvHandler(void* params){
 	 */
 	//entry--;
 	char* fileName = ((fileParams*)params)->fileName;
-	printf("Trying to sort file: %s\n", fileName);
+	//printf("Trying to sort file: %s\n", fileName);
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
 	
 	FILE* fp = ((fileParams*)params)->fp;
@@ -429,8 +438,7 @@ void* csvHandler(void* params){
 	**/
 	pthread_mutex_lock(&lock);
 	numOfEntries--;
-	printf("Found %d of lines\n", numOfEntries);
-	allocate(numOfEntries);	
+	//printf("Found %d lines\n", numOfEntries);	
 	char stream[1028]; 
 	int k = 0;
 	while(!feof(fp))
@@ -445,21 +453,22 @@ void* csvHandler(void* params){
 				if(strncmp(stream, "color,director_name,num_critic_for_reviews,duration,director_facebook_likes,actor_3_facebook_likes,actor_2_name,actor_1_facebook_likes,gross,genres,actor_1_name,movie_title,num_voted_users,cast_total_facebook_likes,actor_3_name,facenumber_in_poster,plot_keywords,movie_imdb_link,num_user_for_reviews,language,country,content_rating,budget,title_year,actor_2_facebook_likes,imdb_score,aspect_ratio,movie_facebook_likes", 417) != 0){
 					//printf("Found directory: %s\n", d);
 					//printf("ERROR04: Invalid column names. Exiting\n");
-					deallocate(numOfEntries);
+					//deallocate(numOfEntries);
 					//wait(NULL);
 					pthread_mutex_unlock(&lock);
 					return 0;
 					//exit(0);
 			}
 			k = 1;
+			allocate(numOfEntries);
+			wait(NULL);
 			entry--;
 		}
 		entry++;
 	}
 	pthread_mutex_unlock(&lock);
 
-	mergesort(info, 0, numOfEntries-2,c);
-	print(info, numOfEntries, fileName, d);
+	//mergesort(info, 0, numOfEntries-2,c);
 	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
@@ -537,9 +546,11 @@ int main(int argc, char* argv[]){
 	    wait(NULL);
 		printf("\nTotal Number of threads: %d\n",*totalProcesses);
 	}
-	
+	mergesort(info, 0, curTotal-2,c);
+	print(info, curTotal, "AllFiles.csv", d);
 	//free(totalProcesses);
 	free(d);
+	deallocate(curTotal);
 	//free(o);
 	return 0;
 }
