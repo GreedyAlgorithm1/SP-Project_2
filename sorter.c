@@ -20,6 +20,7 @@ char *c, o[1024], *d;
 movie** info;
 int *totalProcesses;
 pid_t root;
+unsigned int tid_root;
 //int status[256];
 int curTotal = 0;
 
@@ -247,7 +248,9 @@ void insert(char* line){
 }	
 
 void* traverse(void* p_d){
-
+	
+	if(tid_root != (unsigned int)pthread_self())
+			printf("%ud, ", (unsigned int)pthread_self());
 	DIR *dir;
     char d[1024]; //int z = 0;
 	//printf("Directory data coming in: %s ----\n ", (char*)p_d);
@@ -308,6 +311,7 @@ void* traverse(void* p_d){
 			pthread_create(&tid, NULL, csvHandler, (void*)params);
 			//printf("Creating thread for csv file: %s\n", t_d);
 			pthread_join(tid, NULL);
+			//sleep(2);
 
             //pid_t pid;
             //pid = fork();
@@ -358,6 +362,7 @@ void* traverse(void* p_d){
 			pthread_create(&tid, NULL, traverse, (void*)t_d);
 			//printf("Creating thread for directory: %s\n", t_d);
 			pthread_join(tid, NULL);
+			//sleep(2);
 
             /*if(pid == 0){
 				//(*totalProcesses)++;
@@ -386,17 +391,19 @@ void* traverse(void* p_d){
 }
 
 void* csvHandler(void* params){
+	if(tid_root != (unsigned int)pthread_self())
+			printf("%ud, ", (unsigned int)pthread_self());
     /*		STEP 1
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
 	 */
 	//entry--;
-	char* fileName = ((fileParams*)params)->fileName;
+	//char* fileName = ((fileParams*)params)->fileName;
 	//printf("Trying to sort file: %s\n", fileName);
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
 	
 	FILE* fp = ((fileParams*)params)->fp;
-	char* d = ((fileParams*)params)->d;
+	//char* d = ((fileParams*)params)->d;
 
 	 /*		STEP 2.1
 	  *Count number of entries and columns
@@ -468,7 +475,7 @@ void* csvHandler(void* params){
 	}
 	pthread_mutex_unlock(&lock);
 
-	//mergesort(info, 0, numOfEntries-2,c);
+	mergesort(info, curTotal-numOfEntries, numOfEntries-1,c);
 	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
@@ -478,6 +485,7 @@ void* csvHandler(void* params){
 
 int main(int argc, char* argv[]){
 	root = getpid();
+	tid_root = (unsigned int)pthread_self();
 	totalProcesses = mmap(NULL, sizeof *totalProcesses, PROT_READ | PROT_WRITE,MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 	//totalProcesses = malloc(sizeof(int));
 	*totalProcesses = 1;
@@ -536,7 +544,7 @@ int main(int argc, char* argv[]){
 	}	
 
 	printf("Initial PID: %d\n", getpid());
-	printf("PIDs of all child processes: ");
+	printf("TIDs of all child threads: ");
 	fflush(stdout);
 	traverse(d);
 	fflush(stdout);
@@ -544,7 +552,7 @@ int main(int argc, char* argv[]){
 	fflush(stdout);
 	if(getpid() == root){
 	    wait(NULL);
-		printf("\nTotal Number of threads: %d\n",*totalProcesses);
+		printf("\nTotal Number of threads: %d\n",(*totalProcesses)-1);
 	}
 	mergesort(info, 0, curTotal-1,c);
 	print(info, curTotal+1, "AllFiles.csv", d);
