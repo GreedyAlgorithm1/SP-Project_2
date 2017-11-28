@@ -248,6 +248,11 @@ void insert(char* line){
 }	
 
 void* traverse(void* p_d){
+
+
+//Keep Track of all threads spawned
+//	pthread_t pArray[300];
+//	int counter = 0;
 	
 	if(tid_root != (unsigned int)pthread_self())
 			printf("%ud, ", (unsigned int)pthread_self());
@@ -309,11 +314,14 @@ void* traverse(void* p_d){
 
 			pthread_t tid;
 			pthread_create(&tid, NULL, csvHandler, (void*)params);
+			
+			//pthread_create(&pArray[counter++], NULL, csvHandler, (void*)params);
+			
 			//printf("Creating thread for csv file: %s\n", t_d);
 			pthread_join(tid, NULL);
 			//sleep(2);
 
-            //pid_t pid;
+           // pid_t pid;
             //pid = fork();
 			
 			//pthread_t tid;
@@ -359,12 +367,14 @@ void* traverse(void* p_d){
 			strcat(t_d, ep->d_name);strcat(t_d, "/");
 			pthread_t tid;
 			//printf("t_d: %s d: %s ep->d_name %s\n", t_d, d, ep->d_name);
+//			pthread_create(&pArray[counter++], NULL, traverse, (void*) t_d); 
+
 			pthread_create(&tid, NULL, traverse, (void*)t_d);
 			//printf("Creating thread for directory: %s\n", t_d);
-			pthread_join(tid, NULL);
-			//sleep(2);
+			//pthread_join(tid, NULL);
+				//sleep(2);
 
-            /*if(pid == 0){
+		    /*if(pid == 0){
 				//(*totalProcesses)++;
 				//if(*totalProcesses > 1){
 				//		printf(",");
@@ -382,6 +392,15 @@ void* traverse(void* p_d){
 	}
 	closedir(dir);
 	wait(&status);
+//	int k= 0;
+/*	while(k<counter)
+	{
+		printf("%u, ", pArray[k]);
+		pthread_join(pArray[k], NULL);
+		k++;
+	}
+*/
+//	pthread_exit(NULL);
 	//printf("Returning %d\n", (*totalProcesses));
 	//printf("Exit status: %d\n", WEXITSTATUS(status));
 	//*totalProcesses += WEXITSTATUS(status);
@@ -392,7 +411,7 @@ void* traverse(void* p_d){
 
 void* csvHandler(void* params){
 	if(tid_root != (unsigned int)pthread_self())
-			printf("%ud, ", (unsigned int)pthread_self());
+			printf("%u, ", (unsigned int)pthread_self());
     /*		STEP 1
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
@@ -479,6 +498,7 @@ void* csvHandler(void* params){
 	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
+	//pthread_exit(NULL);
         return 0;
 		//exit(0);
 }
