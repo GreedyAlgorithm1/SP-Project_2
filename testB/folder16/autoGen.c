@@ -3,51 +3,35 @@
 #include <unistd.h>
 #include <string.h>
 
-
 int main(int argc, char **argv)
 {
 
-	printf("Starting\n");
-	int i, lineNum;
+	int i, num = 50;
+	int *lineNum = &num;
 	char fileNum = atoi(argv[1]);
-	FILE *fp[fileNum];
-	char command[100];
-	char *pt1, *pt2,*pt3;
-	pt1 = "sed -n 1, ";
-	pt2 = "p movie_metadata.csv > movie_metadata";
-	pt3 = ".csv";
-	strcpy(command, pt1);
-	printf("%s\n", command);
-	
-	for(i = 0; i< fileNum; i++)
+	//FILE *fp[fileNum];
+	char *command = malloc(sizeof(char)*200);
+
+	char pt3[4], *linenum;
+
+	//strcpy(command, "sed -n 1,300p movie_metadata.csv > moovie_metadata");
+
+	strcpy(pt3, ".csv");
+
+	for(i=0;i<fileNum;i++)
 	{
-		lineNum = rand();
-		char fileName[20];
-		sprintf(fileName, "movie_metadata%d.csv", lineNum);
-		char *linenum;
-		linenum = (char) lineNum;
+		command = (char*)calloc(sizeof(command), sizeof(char));
+		strcpy(command, "sed -n 1,300p movie_metadata.csv > movie_metadata");
+		//char fileName[30];
+		//sprintf(fileName, "movie_metadata%d.csv", num);
+		linenum = (char*) lineNum;
 		strcat(command, linenum);
-		strcat(command, pt2);
-		strcat(command,  linenum);
 		strcat(command, pt3);
-		printf("%s\n", command);
-		fp[i] = fopen(fileName, "w");
 		system(command);
-
+		num+=50;
+		
 	}
 
-
-/*******
-	int i;
-	FILE *files[4];
-	for(i=0; i< 4; i++)
-	{
-		char filename[20];
-		sprintf(filename, "%d.csv", i);
-		files[i] = fopen(filename, "w");
-
-	}
-
-*******/
-	return 0;
+//free(command);
+return 0;
 }
