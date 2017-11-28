@@ -546,7 +546,7 @@ int main(int argc, char* argv[]){
 	    wait(NULL);
 		printf("\nTotal Number of threads: %d\n",*totalProcesses);
 	}
-	mergesort(info, 0, curTotal-2,c);
+	mergesort(info, 0, curTotal-1,c);
 	print(info, curTotal+1, "AllFiles.csv", d);
 	//free(totalProcesses);
 	free(d);
