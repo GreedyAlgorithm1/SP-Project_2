@@ -24,8 +24,10 @@ unsigned int tid_root;
 //int status[256];
 int curTotal = 0;
 
+pthread_t pArray[1024];
+
 //DIR *dir;
-struct dirent *ep;
+//struct dirent *ep;
 pthread_mutex_t lock;
 
 void* csvHandler(void* params);
@@ -248,25 +250,16 @@ void insert(char* line){
 }	
 
 void* traverse(void* p_d){
-
-
+	struct dirent *ep;
 //Keep Track of all threads spawned
-//	pthread_t pArray[300];
-//	int counter = 0;
-	
+	pthread_t pArray[1024];
+	int counter = 0;
 	if(tid_root != (unsigned int)pthread_self())
 			printf("%ud, ", (unsigned int)pthread_self());
 	DIR *dir;
     char d[1024]; //int z = 0;
-	//printf("Directory data coming in: %s ----\n ", (char*)p_d);
-	//char* c_d = (char*)p_d;
-	/*do{
-		d[z] = *(char*)p_d;
-		z++; (char*)p_d++;
-	}while(*(char*)p_d != '\0');*/
 	strcpy(d, (char*)p_d);
 
-	//printf("Trying to open directory: %s\n", d);
 	if(d[0] != '\0'){
 	    dir = opendir(d);
 	    if(ENOENT == errno){
@@ -282,129 +275,53 @@ void* traverse(void* p_d){
             strcat(o, "/");
 	if(*(d+(strlen(d)-1)) != '/')
             strcat(d, "/");
-	int status = 1;
+	//int status = 1;
     while((ep = readdir(dir))){
         if(strcmp(&ep->d_name[strlen(ep->d_name)-4], ".csv") == 0){ //Found csv file
 			char *trv, foundSorted = '0';
 			for(trv = ep->d_name; *trv!='\0'; trv++){
 				if(strncmp(trv, "-sorted-", 8) == 0){
 						foundSorted = '1';
-						//printf("%s already contains -sorted-!\n", ep->d_name);
 				}
 			}
 			if(foundSorted == '1')
 					continue;
 
-            //printf("Found csv file: %s%s\n", d, ep->d_name);
-			mlock(totalProcesses, sizeof *totalProcesses);
-			(*totalProcesses)++;
-			munlock(totalProcesses, sizeof *totalProcesses);
-
 			fileParams* params = (fileParams*)malloc(sizeof(fileParams));
 			char temp[1024];
             strcpy(temp, d);
 			FILE *fp = fopen(strcat(temp, ep->d_name), "r");
-			//printf("Creating thread for file: %s\n", ep->d_name);
 			params->fp = fp;
 			char t_d[1024];
 			memcpy(t_d, d, 1024);
-			//strcat(t_d, ep->d_name);strcat(t_d, "/");
 			params->d = t_d;
 			params->fileName = ep->d_name;
+			pthread_mutex_lock(&lock);
+			counter++;
+			(*totalProcesses)++;
+			pthread_mutex_unlock(&lock);
 
-			pthread_t tid;
-			pthread_create(&tid, NULL, csvHandler, (void*)params);
-			
-			//pthread_create(&pArray[counter++], NULL, csvHandler, (void*)params);
-			
-			//printf("Creating thread for csv file: %s\n", t_d);
-			pthread_join(tid, NULL);
-			//sleep(2);
-
-           // pid_t pid;
-            //pid = fork();
-			
-			//pthread_t tid;
-			//pthread_create(tid, NULL, 
-
-            /*if(pid == 0){
-                //printf("Forking for csv file %s\n",ep->d_name);
-				//(*totalProcesses)++;
-				//if(*totalProcesses > 1){
-				//		printf(",");
-				//		fflush(stdout);
-				//}
-				printf("%d,", getpid());
-				fflush(stdout);
-                char temp[1024];
-                strcpy(temp, d);
-                FILE *fp = fopen(strcat(temp, ep->d_name), "r");
-                if(o[0] == '\0')
-                    csvHandler(fp, d, ep->d_name);
-                else{
-					//printf("Custom o parameter: %s\n", o);
-                    csvHandler(fp, o, ep->d_name);
-				}
-				//printf("CSV File: Returning %d\n", (*totalProcesses)+1);
-				return NULL;
-            }*/
-			//ep = readdir(dir);
+			pthread_create(&pArray[counter-1], NULL, csvHandler, (void*)params);
         }
 	 
         else if(ep->d_type == '\004' && ep->d_name[0] != '.'){ //Found directory
-            //printf("Found directory %s\n", ep->d_name);
-			//mlock(totalProcesses, sizeof *totalProcesses);
-			(*totalProcesses)++;
-			//munlock(totalProcesses, sizeof *totalProcesses);
-
-			//if(root != getpid())
-					//printf(",");
-            //pid_t pid;
-			//pid = fork();
-			
-			char t_d[1024];
+  			char* t_d = malloc(1024);
 			memcpy(t_d, d, 1024);
 			strcat(t_d, ep->d_name);strcat(t_d, "/");
-			pthread_t tid;
-			//printf("t_d: %s d: %s ep->d_name %s\n", t_d, d, ep->d_name);
-//			pthread_create(&pArray[counter++], NULL, traverse, (void*) t_d); 
-
-			pthread_create(&tid, NULL, traverse, (void*)t_d);
-			//printf("Creating thread for directory: %s\n", t_d);
-			//pthread_join(tid, NULL);
-				//sleep(2);
-
-		    /*if(pid == 0){
-				//(*totalProcesses)++;
-				//if(*totalProcesses > 1){
-				//		printf(",");
-				//		fflush(stdout);
-				//}
-				//printf("Forking for directory %s\n", ep->d_name);
-				printf("%d,", getpid());
-				fflush(stdout);
-
-				strcat(d, ep->d_name);strcat(d, "/");
-                dir = opendir(d);
-				continue;
-            }//printf("PID: %d\n", pid);*/
+			pthread_mutex_lock(&lock);
+			counter++;
+			(*totalProcesses)++;
+			pthread_mutex_unlock(&lock);
+			pthread_create(&pArray[counter-1], NULL, traverse, (void*) t_d); 
         }
 	}
 	closedir(dir);
-	wait(&status);
-//	int k= 0;
-/*	while(k<counter)
+	int k= 0;
+	while(k<counter)
 	{
-		printf("%u, ", pArray[k]);
 		pthread_join(pArray[k], NULL);
 		k++;
 	}
-*/
-//	pthread_exit(NULL);
-	//printf("Returning %d\n", (*totalProcesses));
-	//printf("Exit status: %d\n", WEXITSTATUS(status));
-	//*totalProcesses += WEXITSTATUS(status);
-	//printf("Process finished at %s\n", d);
 	return NULL;
 	
 }
@@ -420,7 +337,8 @@ void* csvHandler(void* params){
 	//char* fileName = ((fileParams*)params)->fileName;
 	//printf("Trying to sort file: %s\n", fileName);
 	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
-	
+	//FILE* fp = fopen(((fileParams*)params)->fp, "r");
+	//printf("Trying to open file: %s\n", ((fileParams*)params)->fp);
 	FILE* fp = ((fileParams*)params)->fp;
 	//char* d = ((fileParams*)params)->d;
 
@@ -429,7 +347,8 @@ void* csvHandler(void* params){
 	  */
 	int numOfEntries = 0, numOfColumns = 1;
 	int buff;
-	//NOTE: Found out why its freezing
+	if(fp == NULL)
+			printf("Corrupted file pointer\n");
 	while(!feof(fp))
 	{
 		buff = (char)fgetc(fp);
@@ -492,13 +411,15 @@ void* csvHandler(void* params){
 		}
 		entry++;
 	}
+    mergesort(info, curTotal-numOfEntries, numOfEntries-1,c);
+
 	pthread_mutex_unlock(&lock);
 
-	mergesort(info, curTotal-numOfEntries, numOfEntries-1,c);
 	//deallocate(numOfEntries);
 	//wait(NULL);
 	fclose(fp);
-	//pthread_exit(NULL);
+	//printf("File sorted fine\n");
+	pthread_exit(NULL);
         return 0;
 		//exit(0);
 }
@@ -507,7 +428,6 @@ int main(int argc, char* argv[]){
 	root = getpid();
 	tid_root = (unsigned int)pthread_self();
 	totalProcesses = mmap(NULL, sizeof *totalProcesses, PROT_READ | PROT_WRITE,MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-	//totalProcesses = malloc(sizeof(int));
 	*totalProcesses = 1;
     //char d[2048];
 	//d[8] = '\0';
@@ -570,15 +490,12 @@ int main(int argc, char* argv[]){
 	fflush(stdout);
 	wait(NULL);
 	fflush(stdout);
-	if(getpid() == root){
-	    wait(NULL);
-		printf("\nTotal Number of threads: %d\n",(*totalProcesses)-1);
-	}
 	mergesort(info, 0, curTotal-1,c);
 	print(info, curTotal+1, "AllFiles.csv", d);
 	//free(totalProcesses);
 	free(d);
 	deallocate(curTotal);
 	//free(o);
+	printf("\nTotal Number of threads: %d\n",(*totalProcesses)-1);
 	return 0;
 }
