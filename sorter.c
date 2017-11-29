@@ -5,8 +5,6 @@
 #include <time.h>
 #include <dirent.h>
 #include <unistd.h>
-//#include <sys/stat.h>
-//#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
 #include "sorter.h"
@@ -15,19 +13,14 @@
 
 int entry = 0;
 char *c, o[1024], *d;
-//pid_t PIDs[1024];
-//char stream[1024];
 movie** info;
 int *totalProcesses;
 pid_t root;
 unsigned int tid_root;
-//int status[256];
 int curTotal = 0;
 
 pthread_t pArray[1024];
 
-//DIR *dir;
-//struct dirent *ep;
 pthread_mutex_t lock;
 
 void* csvHandler(void* params);
@@ -333,15 +326,7 @@ void* csvHandler(void* params){
 	 *Note: 'info' will be the array the file will be written into.
 	 *Also the file pointer and opener will be innitalized here too. 
 	 */
-	//entry--;
-	//char* fileName = ((fileParams*)params)->fileName;
-	//printf("Trying to sort file: %s\n", fileName);
-	//memcpy(fileName, ((fileParams*)params)->fileName, strlen(((fileParams*)params)->fileName));
-	//FILE* fp = fopen(((fileParams*)params)->fp, "r");
-	//printf("Trying to open file: %s\n", ((fileParams*)params)->fp);
 	FILE* fp = ((fileParams*)params)->fp;
-	//char* d = ((fileParams*)params)->d;
-
 	 /*		STEP 2.1
 	  *Count number of entries and columns
 	  */
@@ -383,7 +368,6 @@ void* csvHandler(void* params){
 	**/
 	pthread_mutex_lock(&lock);
 	numOfEntries--;
-	//printf("Found %d lines\n", numOfEntries);	
 	char stream[1028]; 
 	int k = 0;
 	while(!feof(fp))
@@ -391,37 +375,25 @@ void* csvHandler(void* params){
 		if(fgets(stream,sizeof(stream),fp) == NULL)
 				break;
 		if(k != 0){
-			//printf("%d : ", entry);
 			insert(stream);
 		}
 		else if(k == 0){
 				if(strncmp(stream, "color,director_name,num_critic_for_reviews,duration,director_facebook_likes,actor_3_facebook_likes,actor_2_name,actor_1_facebook_likes,gross,genres,actor_1_name,movie_title,num_voted_users,cast_total_facebook_likes,actor_3_name,facenumber_in_poster,plot_keywords,movie_imdb_link,num_user_for_reviews,language,country,content_rating,budget,title_year,actor_2_facebook_likes,imdb_score,aspect_ratio,movie_facebook_likes", 417) != 0){
-					//printf("Found directory: %s\n", d);
-					//printf("ERROR04: Invalid column names. Exiting\n");
-					//deallocate(numOfEntries);
-					//wait(NULL);
 					pthread_mutex_unlock(&lock);
 					return 0;
-					//exit(0);
 			}
 			k = 1;
 			allocate(numOfEntries);
-			wait(NULL);
 			entry--;
 		}
 		entry++;
 	}
+	pthread_mutex_unlock(&lock);
     mergesort(info, curTotal-numOfEntries, numOfEntries-1,c);
 
-	pthread_mutex_unlock(&lock);
-
-	//deallocate(numOfEntries);
-	//wait(NULL);
 	fclose(fp);
-	//printf("File sorted fine\n");
 	pthread_exit(NULL);
-        return 0;
-		//exit(0);
+    return 0;
 }
 
 int main(int argc, char* argv[]){
