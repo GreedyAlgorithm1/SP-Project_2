@@ -488,10 +488,9 @@ int main(int argc, char* argv[]){
 	fflush(stdout);
 	traverse(d);
 	fflush(stdout);
-	wait(NULL);
 	fflush(stdout);
 	mergesort(info, 0, curTotal-1,c);
-	print(info, curTotal+1, "AllFiles.csv", d);
+	print(info, curTotal+1, "AllFiles.csv", o);
 	//free(totalProcesses);
 	free(d);
 	deallocate(curTotal);
