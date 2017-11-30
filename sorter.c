@@ -388,8 +388,8 @@ void* csvHandler(void* params){
 		}
 		entry++;
 	}
+	mergesort(info, curTotal-numOfEntries, numOfEntries-1,c);
 	pthread_mutex_unlock(&lock);
-    mergesort(info, curTotal-numOfEntries, numOfEntries-1,c);
 
 	fclose(fp);
 	pthread_exit(NULL);
