@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/wait.h>
-#include "sorter.h"
+#include "sorter_thread.h"
 #include <errno.h>
 #include <pthread.h>
 

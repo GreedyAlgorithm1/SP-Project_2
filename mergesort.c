@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sorter.h"
+#include "sorter_thread.h"
 
 void mergesort(movie **array, int l, int r, char *word)
 {
